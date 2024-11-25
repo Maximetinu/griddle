@@ -5,48 +5,179 @@
     <title>Grid Overlay</title>
     <style>
       body {
-        font-family: Arial, sans-serif;
-        min-width: 200px;
-        padding: 10px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        min-width: 250px;
+        padding: 15px;
+        margin: 0;
+        background-color: #f1f1f1;
       }
+
       #status {
-        margin-bottom: 10px;
+        margin-bottom: 15px;
+        font-size: 14px;
+        color: #333;
       }
+
       #controls {
         display: none;
       }
-      label {
+
+      .control-group {
+        margin-bottom: 15px;
+      }
+
+      .control-group label {
         display: block;
-        margin-top: 5px;
+        font-size: 13px;
+        color: #333;
+        margin-bottom: 5px;
       }
-      input[type="number"] {
-        width: 60px;
+
+      .control-group input,
+      .control-group select {
+        width: 100%;
+        padding: 8px;
+        font-size: 13px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
       }
+
+      .control-group input[type="color"] {
+        padding: 0;
+        height: 34px;
+        background: none;
+        border: none;
+      }
+
+      .control-group input[type="checkbox"] {
+        width: auto;
+        margin-right: 5px;
+      }
+
+      .checkbox-group {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .checkbox-group label {
+        margin: 0;
+        font-size: 13px;
+      }
+
+      .range-container {
+        margin-bottom: 15px;
+      }
+
+      .range-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: #666;
+        margin-top: -8px;
+      }
+
+      .buttons {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+      }
+
       button {
-        margin-top: 10px;
+        flex: 1;
+        padding: 10px 15px;
+        font-size: 14px;
+        color: #fff;
+        background-color: #007acc;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 10px;
+      }
+
+      button:hover {
+        background-color: #006bb3;
+      }
+
+      button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+      }
+
+      #select-element {
+        width: 100%;
+        background-color: #28a745;
+        margin-bottom: 15px;
+      }
+
+      #select-element:hover {
+        background-color: #218838;
+      }
+
+      #deselect-element {
+        background-color: #dc3545;
+        margin-right: 0;
+      }
+
+      #deselect-element:hover {
+        background-color: #c82333;
+      }
+
+      /* Tooltip styling */
+      .tooltip {
+        position: relative;
+        display: inline-block;
+        cursor: pointer;
+      }
+
+      .tooltip .tooltiptext {
+        visibility: hidden;
+        width: 160px;
+        background-color: #555;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
         padding: 5px;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%; /* Position above the element */
+        left: 50%;
+        margin-left: -80px;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      .tooltip:hover .tooltiptext {
+        visibility: visible;
+        opacity: 1;
       }
     </style>
   </head>
   <body>
     <div id="status">No element selected.</div>
-    <button id="select-element">Select an element to add grid lines</button>
+    <button id="select-element">Select Element</button>
 
     <div id="controls">
-      <label>
-        Columns:
+      <div class="control-group">
+        <label for="columns">Columns</label>
         <input type="number" id="columns" value="3" min="1" />
-      </label>
-      <label>
-        Rows:
+      </div>
+      <div class="control-group">
+        <label for="rows">Rows</label>
         <input type="number" id="rows" value="3" min="1" />
-      </label>
-      <label>
-        Line Color:
+      </div>
+      <div class="control-group">
+        <label for="line-color">Line Color</label>
         <input type="color" id="line-color" value="#ff0000" />
-      </label>
-      <label>
-        Line Transparency:
+      </div>
+      <div class="control-group">
+        <label for="line-width">Line Width (px)</label>
+        <input type="number" id="line-width" value="3" min="1" />
+      </div>
+      <div class="control-group range-container">
+        <label for="line-alpha">Line Opacity</label>
         <input
           type="range"
           id="line-alpha"
@@ -55,16 +186,18 @@
           max="1"
           step="0.01"
         />
-      </label>
-      <label>
-        Line Width (px):
-        <input type="number" id="line-width" value="3" min="1" />
-      </label>
-      <label>
+        <div class="range-labels">
+          <span>Transparent</span>
+          <span>Opaque</span>
+        </div>
+      </div>
+      <div class="checkbox-group">
         <input type="checkbox" id="show-border" />
-        Show Border
-      </label>
-      <button id="deselect-element">Remove Grid Lines</button>
+        <label for="show-border">Show Border</label>
+      </div>
+      <div class="buttons">
+        <button id="deselect-element">Remove Grid Lines</button>
+      </div>
     </div>
 
     <script src="popup.js"></script>
