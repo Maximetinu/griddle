@@ -1,8 +1,27 @@
 let selectedElement = null;
-let gridOptions = { lineWidth: 3, lineColor: "red", columns: 3, rows: 3 };
+let gridOptions = {
+  lineWidth: 3,
+  lineColor: "#ff0000",
+  lineAlpha: 1,
+  columns: 3,
+  rows: 3,
+  showBorder: false,
+};
 
 function addGridToElement(element, options) {
   if (!element) return;
+
+  // Convert line color and alpha to rgba
+  const { lineColor = "#ff0000", lineAlpha = 1, lineWidth = 3 } = options;
+  const borderColor = hexToRGBA(lineColor, lineAlpha);
+
+  // Add or remove border based on options.showBorder
+  if (options.showBorder) {
+    element.style.outline = `${lineWidth}px solid ${borderColor}`;
+  } else {
+    element.style.outline = "";
+  }
+
   addGridLines(element, options.rows, options.columns, options);
 }
 
@@ -12,6 +31,7 @@ function removeGridFromElement(element) {
   if (existingGrid) {
     existingGrid.remove();
   }
+  element.style.outline = "";
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -19,13 +39,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     startElementSelection().then((element) => {
       if (element) {
         selectedElement = element;
-        gridOptions = {
-          lineWidth: 3,
-          lineColor: "red",
-          columns: 3,
-          rows: 3,
-        };
-        addGridToElement(selectedElement, gridOptions);
+        // Load stored grid options
+        chrome.storage.local.get(["gridOptions"], (result) => {
+          gridOptions = result.gridOptions || {
+            lineWidth: 3,
+            lineColor: "#ff0000",
+            lineAlpha: 1,
+            columns: 3,
+            rows: 3,
+            showBorder: false,
+          };
+          addGridToElement(selectedElement, gridOptions);
+        });
         sendResponse({ selected: true });
       } else {
         sendResponse({ selected: false });
@@ -43,14 +68,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       removeGridFromElement(selectedElement);
       gridOptions = message.options;
       addGridToElement(selectedElement, gridOptions);
+
+      // Save grid options
+      chrome.storage.local.set({ gridOptions: gridOptions });
     }
   } else if (message.action === "get-selection-status") {
-    if (selectedElement) {
+    if (selectedElement && document.contains(selectedElement)) {
       sendResponse({
         selected: true,
         gridOptions: gridOptions,
       });
     } else {
+      // Element no longer exists
+      selectedElement = null;
+      gridOptions = null;
       sendResponse({ selected: false });
     }
     // No need to return true here as sendResponse is called synchronously
@@ -59,7 +90,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 // Include the addGridLines function here
 function addGridLines(element, rows, columns, options = {}) {
-  const { lineWidth = 3, lineColor = "red" } = options;
+  const { lineWidth = 3, lineColor = "#ff0000", lineAlpha = 1 } = options;
+
+  // Convert hex color to rgba
+  const lineColorRGBA = hexToRGBA(lineColor, lineAlpha);
 
   // Ensure the element has a relative position for absolute positioning of grid lines
   if (getComputedStyle(element).position === "static") {
@@ -94,7 +128,7 @@ function addGridLines(element, rows, columns, options = {}) {
     line.style.left = "0";
     line.style.width = "100%";
     line.style.height = `${lineWidth}px`;
-    line.style.backgroundColor = lineColor;
+    line.style.backgroundColor = lineColorRGBA;
     line.style.transform = "translateY(-50%)";
     gridContainer.appendChild(line);
   }
@@ -109,10 +143,18 @@ function addGridLines(element, rows, columns, options = {}) {
     line.style.left = `${leftPercent}%`;
     line.style.width = `${lineWidth}px`;
     line.style.height = "100%";
-    line.style.backgroundColor = lineColor;
+    line.style.backgroundColor = lineColorRGBA;
     line.style.transform = "translateX(-50%)";
     gridContainer.appendChild(line);
   }
+}
+
+// Function to convert hex color to rgba
+function hexToRGBA(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16) || 0;
+  const g = parseInt(hex.slice(3, 5), 16) || 0;
+  const b = parseInt(hex.slice(5, 7), 16) || 0;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 // Element selection logic
