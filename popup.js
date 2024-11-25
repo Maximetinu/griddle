@@ -1,4 +1,5 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  await injectContentScript();
   const statusEl = document.getElementById("status");
   const selectBtn = document.getElementById("select-element");
   const deselectBtn = document.getElementById("deselect-element");
@@ -161,3 +162,19 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialize UI
   checkSelectionStatus();
 });
+
+function injectContentScript() {
+  return new Promise((resolve) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      chrome.scripting.executeScript(
+        {
+          target: { tabId: tabs[0].id },
+          files: ["content.js"],
+        },
+        () => {
+          resolve();
+        }
+      );
+    });
+  });
+}
