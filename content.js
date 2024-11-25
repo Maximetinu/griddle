@@ -256,6 +256,9 @@ function startElementSelection() {
       event.stopImmediatePropagation();
       cleanup();
       resolve(event.target);
+
+      // Send message to background script to open the popup
+      chrome.runtime.sendMessage({ action: "open-popup" });
     }
 
     function onMouseDown(event) {
