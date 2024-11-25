@@ -166,15 +166,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 function injectContentScript() {
   return new Promise((resolve) => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      chrome.scripting.executeScript(
-        {
-          target: { tabId: tabs[0].id },
-          files: ["content.js"],
-        },
-        () => {
+      chrome.tabs.sendMessage(tabs[0].id, { action: "ping" }, (response) => {
+        if (chrome.runtime.lastError || !response) {
+          // Content script not injected yet, so inject it
+          chrome.scripting.executeScript(
+            {
+              target: { tabId: tabs[0].id },
+              files: ["content.js"],
+            },
+            () => {
+              resolve();
+            }
+          );
+        } else {
+          // Content script already injected
           resolve();
         }
-      );
+      });
     });
   });
 }
