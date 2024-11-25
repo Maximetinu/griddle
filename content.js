@@ -81,6 +81,7 @@ function addGridToElement(element, options) {
   }
 
   addGridLines(element, options.rows, options.columns, options);
+  updateBadge(true);
 }
 
 function removeGridFromElement(element) {
@@ -103,6 +104,7 @@ function removeGridFromElement(element) {
       selectedElement = img;
     }
   }
+  updateBadge(false);
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

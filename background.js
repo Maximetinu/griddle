@@ -1,3 +1,17 @@
+// background.js
+
+// Listen for tab activation (when the user switches tabs)
+chrome.tabs.onActivated.addListener(() => {
+  chrome.action.setBadgeText({ text: "" });
+});
+
+// Listen for tab updates (when the page is refreshed or navigated)
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === "complete") {
+    chrome.action.setBadgeText({ text: "" });
+  }
+});
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "open-popup") {
     // Open the popup programmatically
