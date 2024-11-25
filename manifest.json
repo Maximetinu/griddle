@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Grid Overlay Extension",
+  "version": "1.1",
+  "description": "Overlay grid lines on selected page elements.",
+  "permissions": ["scripting", "activeTab"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Grid Overlay"
+  },
+  "host_permissions": ["<all_urls>"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ]
+}
