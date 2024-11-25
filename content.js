@@ -250,7 +250,7 @@ function startElementSelection() {
       highlightElement(event.target);
     }
 
-    function onClick(event) {
+    function onMouseDown(event) {
       event.stopPropagation();
       event.preventDefault();
 
@@ -273,7 +273,7 @@ function startElementSelection() {
     function cleanup() {
       removeHighlight();
       document.removeEventListener("mouseover", onMouseOver, true);
-      document.removeEventListener("click", onClick, true);
+      document.removeEventListener("mousedown", onMouseDown, true);
       selectionOverlay.remove();
       const style = document.getElementById("grid-selector-style");
       if (style) {
@@ -292,6 +292,6 @@ function startElementSelection() {
     document.head.appendChild(style);
 
     document.addEventListener("mouseover", onMouseOver, true);
-    document.addEventListener("click", onClick, true);
+    document.addEventListener("mousedown", onMouseDown, true);
   });
 }
