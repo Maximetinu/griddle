@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Grid Overlay Extension",
-  "version": "1.1",
+  "name": "Griddle – Grid Guides Overlay",
+  "version": "1.0",
   "description": "Overlay grid lines on selected page elements.",
   "permissions": ["scripting", "activeTab", "storage"],
   "action": {
