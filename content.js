@@ -1,12 +1,36 @@
 let selectedElement = null;
-let gridOptions = {
-  lineWidth: 3,
-  lineColor: "#ff0000",
-  lineAlpha: 1,
-  columns: 3,
-  rows: 3,
-  showBorder: false,
-};
+let gridOptions = null;
+
+// Function to restore grid state if grid lines are present on the page
+function restoreGridState() {
+  // Look for an element with the data attribute
+  const element = document.querySelector('[data-grid-overlay="true"]');
+
+  if (element) {
+    selectedElement = element;
+
+    // Load grid options from storage
+    chrome.storage.local.get(["gridOptions"], (result) => {
+      gridOptions = result.gridOptions || {
+        lineWidth: 3,
+        lineColor: "#ff0000",
+        lineAlpha: 1,
+        columns: 3,
+        rows: 3,
+        showBorder: false,
+      };
+
+      // Ensure the grid lines are properly attached
+      addGridToElement(selectedElement, gridOptions);
+    });
+  } else {
+    selectedElement = null;
+    gridOptions = null;
+  }
+}
+
+// Call restoreGridState when the content script loads
+restoreGridState();
 
 function addGridToElement(element, options) {
   if (!element) return;
@@ -37,6 +61,9 @@ function addGridToElement(element, options) {
     }
   }
 
+  // Mark the element with a data attribute
+  element.setAttribute("data-grid-overlay", "true");
+
   // Convert line color and alpha to rgba
   const { lineColor = "#ff0000", lineAlpha = 1, lineWidth = 3 } = options;
   const borderColor = hexToRGBA(lineColor, lineAlpha);
@@ -58,6 +85,7 @@ function removeGridFromElement(element) {
     existingGrid.remove();
   }
   element.style.outline = "";
+  element.removeAttribute("data-grid-overlay");
 
   // If we wrapped an <img>, unwrap it
   if (element.classList.contains("grid-image-wrapper")) {
@@ -100,6 +128,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       removeGridFromElement(selectedElement);
       selectedElement = null;
       gridOptions = null;
+      // Remove grid options from storage
+      chrome.storage.local.remove("gridOptions");
     }
   } else if (message.action === "update-grid-lines") {
     if (selectedElement) {
@@ -111,6 +141,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       chrome.storage.local.set({ gridOptions: gridOptions });
     }
   } else if (message.action === "get-selection-status") {
+    // Restore grid state before responding
+    restoreGridState();
+
     if (selectedElement && document.contains(selectedElement)) {
       sendResponse({
         selected: true,
