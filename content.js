@@ -11,6 +11,26 @@ let gridOptions = {
 function addGridToElement(element, options) {
   if (!element) return;
 
+  // Wrap <img> elements
+  if (element.tagName.toLowerCase() === "img") {
+    // Check if already wrapped
+    if (!element.parentElement.classList.contains("grid-image-wrapper")) {
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "relative";
+      wrapper.style.display = "inline-block";
+      wrapper.classList.add("grid-image-wrapper");
+
+      // Insert the wrapper before the image and move the image inside it
+      element.parentElement.insertBefore(wrapper, element);
+      wrapper.appendChild(element);
+
+      // Update the element reference to the wrapper
+      element = wrapper;
+    } else {
+      element = element.parentElement;
+    }
+  }
+
   // Convert line color and alpha to rgba
   const { lineColor = "#ff0000", lineAlpha = 1, lineWidth = 3 } = options;
   const borderColor = hexToRGBA(lineColor, lineAlpha);
@@ -32,6 +52,15 @@ function removeGridFromElement(element) {
     existingGrid.remove();
   }
   element.style.outline = "";
+
+  // If we wrapped an <img>, unwrap it
+  if (element.classList.contains("grid-image-wrapper")) {
+    const img = element.querySelector("img");
+    if (img) {
+      element.parentElement.insertBefore(img, element);
+      element.remove();
+    }
+  }
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
