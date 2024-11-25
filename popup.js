@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function updateGridLines() {
     const lineColor = lineColorInput.value;
     const lineAlpha = parseFloat(lineAlphaInput.value);
-    const lineWidth = parseInt(lineWidthInput.value, 10);
+    const lineWidth = parseFloat(lineWidthInput.value);
     const columns = parseInt(columnsInput.value, 10);
     const rows = parseInt(rowsInput.value, 10);
     const showBorder = showBorderInput.checked;
