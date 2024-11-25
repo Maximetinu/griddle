@@ -23,9 +23,14 @@ function restoreGridState() {
       // Ensure the grid lines are properly attached
       addGridToElement(selectedElement, gridOptions);
     });
+
+    // Update the badge to "ON"
+    updateBadge(true);
   } else {
     selectedElement = null;
     gridOptions = null;
+
+    updateBadge(false);
   }
 }
 
@@ -130,6 +135,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       gridOptions = null;
       // Remove grid options from storage
       chrome.storage.local.remove("gridOptions");
+      // Update the badge to clear it
+      updateBadge(false);
     }
   } else if (message.action === "update-grid-lines") {
     if (selectedElement) {
@@ -259,6 +266,9 @@ function startElementSelection() {
 
       // Send message to background script to open the popup
       chrome.runtime.sendMessage({ action: "open-popup" });
+
+      // Update the badge to "ON"
+      updateBadge(true);
     }
 
     function onMouseDown(event) {
@@ -313,4 +323,14 @@ function startElementSelection() {
     document.addEventListener("mousedown", onMouseDown, true);
     document.addEventListener("mouseup", onMouseUp, true);
   });
+}
+
+function updateBadge(isSelected) {
+  if (isSelected) {
+    // Notify background script to set the badge
+    chrome.runtime.sendMessage({ action: "set-badge", text: "ON" });
+  } else {
+    // Notify background script to clear the badge
+    chrome.runtime.sendMessage({ action: "clear-badge" });
+  }
 }
