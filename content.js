@@ -4,35 +4,42 @@
 
   // Function to restore grid state if grid lines are present on the page
   function restoreGridState() {
-    // Look for an element with the data attribute
-    const element = document.querySelector('[data-grid-overlay="true"]');
+    return new Promise((resolve) => {
+      // Look for an element with the data attribute
+      const element = document.querySelector('[data-grid-overlay="true"]');
 
-    if (element) {
-      selectedElement = element;
+      if (element) {
+        selectedElement = element;
 
-      // Load grid options from storage
-      chrome.storage.local.get(["gridOptions"], (result) => {
-        gridOptions = result.gridOptions || {
-          lineWidth: 3,
-          lineColor: "#ff0000",
-          lineAlpha: 1,
-          columns: 3,
-          rows: 3,
-          showBorder: false,
-        };
+        // Load grid options from storage
+        chrome.storage.local.get(["gridOptions"], (result) => {
+          gridOptions = result.gridOptions || {
+            lineWidth: 3,
+            lineColor: "#ff0000",
+            lineAlpha: 1,
+            columns: 3,
+            rows: 3,
+            showBorder: false,
+          };
 
-        // Ensure the grid lines are properly attached
-        addGridToElement(selectedElement, gridOptions);
-      });
+          // Ensure the grid lines are properly attached
+          addGridToElement(selectedElement, gridOptions);
 
-      // Update the badge to "ON"
-      updateBadge(true);
-    } else {
-      selectedElement = null;
-      gridOptions = null;
+          // Update the badge to "ON"
+          updateBadge(true);
 
-      updateBadge(false);
-    }
+          resolve();
+        });
+      } else {
+        selectedElement = null;
+        gridOptions = null;
+
+        // Update the badge to "OFF"
+        updateBadge(false);
+
+        resolve();
+      }
+    });
   }
 
   // Call restoreGridState when the content script loads
@@ -154,20 +161,20 @@
       }
     } else if (message.action === "get-selection-status") {
       // Restore grid state before responding
-      restoreGridState();
-
-      if (selectedElement && document.contains(selectedElement)) {
-        sendResponse({
-          selected: true,
-          gridOptions: gridOptions,
-        });
-      } else {
-        // Element no longer exists
-        selectedElement = null;
-        gridOptions = null;
-        sendResponse({ selected: false });
-      }
-      // No need to return true here as sendResponse is called synchronously
+      restoreGridState().then(() => {
+        if (selectedElement && document.contains(selectedElement)) {
+          sendResponse({
+            selected: true,
+            gridOptions: gridOptions,
+          });
+        } else {
+          // Element no longer exists
+          selectedElement = null;
+          gridOptions = null;
+          sendResponse({ selected: false });
+        }
+      });
+      return true; // Keep the messaging channel open for sendResponse
     }
   });
 

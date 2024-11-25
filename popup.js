@@ -118,7 +118,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             // Use stored grid options if available
             loadGridOptions((storedOptions) => {
-              const options = storedOptions || response.gridOptions;
+              const options = storedOptions || response.gridOptions || {};
               lineColorInput.value = options.lineColor || "#ff0000";
               lineAlphaInput.value =
                 options.lineAlpha !== undefined ? options.lineAlpha : 1;
