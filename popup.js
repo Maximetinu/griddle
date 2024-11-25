@@ -42,14 +42,17 @@ document.addEventListener("DOMContentLoaded", () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       chrome.tabs.sendMessage(
         tabs[0].id,
-        { action: "start-selection" },
-        (response) => {
-          if (response && response.selected) {
-            selected = true;
-            updateUI();
-          }
-        }
+        { action: "start-selection" }
+        // (response) => {
+        //   if (response && response.selected) {
+        //     selected = true;
+        //     updateUI();
+        //   }
+        // }
       );
+
+      // Close the popup immediately after sending the message
+      window.close();
     });
   });
 
