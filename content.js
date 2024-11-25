@@ -251,11 +251,23 @@ function startElementSelection() {
     }
 
     function onClick(event) {
-      event.stopPropagation();
       event.preventDefault();
-
+      event.stopPropagation();
+      event.stopImmediatePropagation();
       cleanup();
       resolve(event.target);
+    }
+
+    function onMouseDown(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+    }
+
+    function onMouseUp(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
     }
 
     function highlightElement(element) {
@@ -274,6 +286,8 @@ function startElementSelection() {
       removeHighlight();
       document.removeEventListener("mouseover", onMouseOver, true);
       document.removeEventListener("click", onClick, true);
+      document.removeEventListener("mousedown", onMouseDown, true);
+      document.removeEventListener("mouseup", onMouseUp, true);
       selectionOverlay.remove();
       const style = document.getElementById("grid-selector-style");
       if (style) {
@@ -293,5 +307,7 @@ function startElementSelection() {
 
     document.addEventListener("mouseover", onMouseOver, true);
     document.addEventListener("click", onClick, true);
+    document.addEventListener("mousedown", onMouseDown, true);
+    document.addEventListener("mouseup", onMouseUp, true);
   });
 }
