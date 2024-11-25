@@ -26,8 +26,14 @@ function addGridToElement(element, options) {
 
       // Update the element reference to the wrapper
       element = wrapper;
+
+      // Update selectedElement to the wrapper
+      selectedElement = wrapper;
     } else {
       element = element.parentElement;
+
+      // Update selectedElement to the wrapper
+      selectedElement = element;
     }
   }
 
@@ -59,6 +65,9 @@ function removeGridFromElement(element) {
     if (img) {
       element.parentElement.insertBefore(img, element);
       element.remove();
+
+      // Update selectedElement to the img
+      selectedElement = img;
     }
   }
 }
