@@ -1,44 +1,40 @@
 (function () {
   let selectedElement = null;
   let gridOptions = null;
+  let elementSelector = null; // New variable to store the selector
 
-  // Function to restore grid state if grid lines are present on the page
+  // Function to restore grid state
   function restoreGridState() {
     return new Promise((resolve) => {
-      // Look for an element with the data attribute
-      const element = document.querySelector('[data-grid-overlay="true"]');
+      // Retrieve grid options and element selector from storage
+      chrome.storage.local.get(["gridOptions", "elementSelector"], (result) => {
+        if (result.elementSelector) {
+          const element = document.querySelector(result.elementSelector);
+          if (element) {
+            selectedElement = element;
+            gridOptions = result.gridOptions || {
+              lineWidth: 3,
+              lineColor: "#ff0000",
+              lineAlpha: 1,
+              columns: 3,
+              rows: 3,
+              showBorder: false,
+            };
 
-      if (element) {
-        selectedElement = element;
-
-        // Load grid options from storage
-        chrome.storage.local.get(["gridOptions"], (result) => {
-          gridOptions = result.gridOptions || {
-            lineWidth: 3,
-            lineColor: "#ff0000",
-            lineAlpha: 1,
-            columns: 3,
-            rows: 3,
-            showBorder: false,
-          };
-
-          // Ensure the grid lines are properly attached
-          addGridToElement(selectedElement, gridOptions);
-
-          // Update the badge to "ON"
-          updateBadge(true);
-
-          resolve();
-        });
-      } else {
-        selectedElement = null;
-        gridOptions = null;
-
-        // Update the badge to "OFF"
-        updateBadge(false);
-
+            addGridToElement(selectedElement, gridOptions);
+            updateBadge(true);
+          } else {
+            selectedElement = null;
+            gridOptions = null;
+            updateBadge(false);
+          }
+        } else {
+          selectedElement = null;
+          gridOptions = null;
+          updateBadge(false);
+        }
         resolve();
-      }
+      });
     });
   }
 
@@ -90,6 +86,14 @@
 
     addGridLines(element, options.rows, options.columns, options);
     updateBadge(true);
+
+    // Generate and store the unique selector
+    elementSelector = getCssPath(element);
+    // Save grid options and element selector
+    chrome.storage.local.set({
+      gridOptions: options,
+      elementSelector: elementSelector,
+    });
   }
 
   function removeGridFromElement(element) {
@@ -113,6 +117,8 @@
       }
     }
     updateBadge(false);
+    // Remove grid options and element selector from storage
+    chrome.storage.local.remove(["gridOptions", "elementSelector"]);
   }
 
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -145,8 +151,8 @@
         removeGridFromElement(selectedElement);
         selectedElement = null;
         gridOptions = null;
-        // Remove grid options from storage
-        chrome.storage.local.remove("gridOptions");
+        // Remove grid options and element selector from storage
+        chrome.storage.local.remove(["gridOptions", "elementSelector"]);
         // Update the badge to clear it
         updateBadge(false);
       }
@@ -156,8 +162,11 @@
         gridOptions = message.options;
         addGridToElement(selectedElement, gridOptions);
 
-        // Save grid options
-        chrome.storage.local.set({ gridOptions: gridOptions });
+        // Save grid options and element selector
+        chrome.storage.local.set({
+          gridOptions: gridOptions,
+          elementSelector: elementSelector,
+        });
       }
     } else if (message.action === "get-selection-status") {
       // Restore grid state before responding
@@ -345,5 +354,29 @@
       // Notify background script to clear the badge
       chrome.runtime.sendMessage({ action: "clear-badge" });
     }
+  }
+
+  // Function to generate a unique CSS selector for an element
+  function getCssPath(element) {
+    if (!(element instanceof Element)) return;
+    const path = [];
+    while (element.nodeType === Node.ELEMENT_NODE) {
+      let selector = element.nodeName.toLowerCase();
+      if (element.id) {
+        selector += "#" + element.id;
+        path.unshift(selector);
+        break;
+      } else {
+        let sib = element,
+          nth = 1;
+        while ((sib = sib.previousElementSibling)) {
+          if (sib.nodeName.toLowerCase() == selector) nth++;
+        }
+        if (nth != 1) selector += ":nth-of-type(" + nth + ")";
+      }
+      path.unshift(selector);
+      element = element.parentNode;
+    }
+    return path.join(" > ");
   }
 })();
