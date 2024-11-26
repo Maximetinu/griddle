@@ -1,36 +1,34 @@
 (function () {
   let selectedElement = null;
   let gridOptions = null;
-  let elementSelector = null; // New variable to store the selector
+  let elementSelector = null;
 
   // Function to restore grid state
   function restoreGridState() {
     return new Promise((resolve) => {
       // Retrieve grid options and element selector from storage
       chrome.storage.local.get(["gridOptions", "elementSelector"], (result) => {
+        gridOptions = result.gridOptions || {
+          lineWidth: 3,
+          lineColor: "#ff0000",
+          lineAlpha: 1,
+          columns: 3,
+          rows: 3,
+          showBorder: false,
+        };
+
         if (result.elementSelector) {
           const element = document.querySelector(result.elementSelector);
           if (element) {
             selectedElement = element;
-            gridOptions = result.gridOptions || {
-              lineWidth: 3,
-              lineColor: "#ff0000",
-              lineAlpha: 1,
-              columns: 3,
-              rows: 3,
-              showBorder: false,
-            };
-
             addGridToElement(selectedElement, gridOptions);
             updateBadge(true);
           } else {
             selectedElement = null;
-            gridOptions = null;
             updateBadge(false);
           }
         } else {
           selectedElement = null;
-          gridOptions = null;
           updateBadge(false);
         }
         resolve();
@@ -89,9 +87,8 @@
 
     // Generate and store the unique selector
     elementSelector = getCssPath(element);
-    // Save grid options and element selector
+    // Save element selector (gridOptions are already saved elsewhere)
     chrome.storage.local.set({
-      gridOptions: options,
       elementSelector: elementSelector,
     });
   }
@@ -117,8 +114,8 @@
       }
     }
     updateBadge(false);
-    // Remove grid options and element selector from storage
-    chrome.storage.local.remove(["gridOptions", "elementSelector"]);
+    // Remove element selector from storage, but keep gridOptions
+    chrome.storage.local.remove(["elementSelector"]);
   }
 
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -150,9 +147,7 @@
       if (selectedElement) {
         removeGridFromElement(selectedElement);
         selectedElement = null;
-        gridOptions = null;
-        // Remove grid options and element selector from storage
-        chrome.storage.local.remove(["gridOptions", "elementSelector"]);
+        // Do not clear gridOptions here
         // Update the badge to clear it
         updateBadge(false);
       }
@@ -162,11 +157,15 @@
         gridOptions = message.options;
         addGridToElement(selectedElement, gridOptions);
 
-        // Save grid options and element selector
+        // Save grid options
         chrome.storage.local.set({
           gridOptions: gridOptions,
           elementSelector: elementSelector,
         });
+      } else {
+        // Update gridOptions even if no element is selected
+        gridOptions = message.options;
+        chrome.storage.local.set({ gridOptions: gridOptions });
       }
     } else if (message.action === "get-selection-status") {
       // Restore grid state before responding
@@ -177,10 +176,8 @@
             gridOptions: gridOptions,
           });
         } else {
-          // Element no longer exists
           selectedElement = null;
-          gridOptions = null;
-          sendResponse({ selected: false });
+          sendResponse({ selected: false, gridOptions: gridOptions });
         }
       });
       return true; // Keep the messaging channel open for sendResponse
@@ -333,10 +330,10 @@
       const style = document.createElement("style");
       style.id = "grid-selector-style";
       style.innerHTML = `
-      .grid-selector-highlight {
-        outline: 2px solid #00f !important;
-      }
-    `;
+        .grid-selector-highlight {
+          outline: 2px solid #00f !important;
+        }
+      `;
       document.head.appendChild(style);
 
       document.addEventListener("mouseover", onMouseOver, true);
