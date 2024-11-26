@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Griddle – Grid Guides Overlay",
-  "version": "1.1",
+  "version": "1.2",
   "description": "Overlay grid lines on selected page elements.",
   "author": "Maximetinu",
   "homepage_url": "https://www.maximetinu.com",
